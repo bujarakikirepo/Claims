@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Claims
 {
@@ -7,7 +6,7 @@ namespace Claims
     {
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
-        
+
         [JsonProperty(PropertyName = "coverId")]
         public string CoverId { get; set; }
 
