@@ -19,8 +19,8 @@ public class CoversController : ControllerBase
         _container = cosmosClient?.GetContainer("ClaimDb", "Cover")
                      ?? throw new ArgumentNullException(nameof(cosmosClient));
     }
-    
-    [HttpPost]
+
+    [HttpPost("premium")]
     public async Task<ActionResult> ComputePremiumAsync(DateOnly startDate, DateOnly endDate, CoverType coverType)
     {
         return Ok(ComputePremium(startDate, endDate, coverType));
@@ -46,7 +46,7 @@ public class CoversController : ControllerBase
     {
         try
         {
-            var response = await _container.ReadItemAsync<Cover>(id, new (id));
+            var response = await _container.ReadItemAsync<Cover>(id, new(id));
             return Ok(response.Resource);
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -69,7 +69,7 @@ public class CoversController : ControllerBase
     public Task DeleteAsync(string id)
     {
         _auditer.AuditCover(id, "DELETE");
-        return _container.DeleteItemAsync<Cover>(id, new (id));
+        return _container.DeleteItemAsync<Cover>(id, new(id));
     }
 
     private decimal ComputePremium(DateOnly startDate, DateOnly endDate, CoverType coverType)
