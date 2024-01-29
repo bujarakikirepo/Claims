@@ -1,3 +1,5 @@
+using Application.Interfaces;
+using Application.Services;
 using Domain.Interfaces;
 using Domain.Services;
 using Infrastructure.Auditing;
@@ -40,9 +42,10 @@ builder.Services.AddScoped<ICoverCosmosDbService>(provider =>
         provider.GetRequiredService<CosmosClient>(),
         "ClaimDb",
         "Cover"));
-builder.Services.AddDbContext<Infrastructure.Auditing.AuditContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AuditContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IQueueStorageService, QueueStorageService>();
 builder.Services.AddScoped<IClaimService, ClaimService>();
+builder.Services.AddScoped<ICoverService, CoverService>();
 builder.Services.AddScoped<IAuditingService, AuditingService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

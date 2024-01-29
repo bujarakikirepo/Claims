@@ -22,8 +22,8 @@ namespace Application.Services
             _coverCosmosDbService = coverCosmosDbService;
             _queueStorageService = queueStorageService;
             _configuration = configuration;
-
         }
+
         public async Task<GetCoverModel> CreateAsync(CreateCoverModel createCoverModel)
         {
             //validate input
@@ -63,36 +63,47 @@ namespace Application.Services
 
         public decimal ComputePremium(DateOnly startDate, DateOnly endDate, CoverType coverType)
         {
-            var multiplier = 1.3m;
-            if (coverType == CoverType.Yacht)
-            {
-                multiplier = 1.1m;
-            }
-
-            if (coverType == CoverType.PassengerShip)
-            {
-                multiplier = 1.2m;
-            }
-
-            if (coverType == CoverType.Tanker)
-            {
-                multiplier = 1.5m;
-            }
-
-            var premiumPerDay = 1250 * multiplier;
+            var basePremiumPerDay = 1250m;
+            var multiplier = GetMultiplier(coverType);
+            var premiumPerDay = basePremiumPerDay * multiplier;
             var insuranceLength = endDate.DayNumber - startDate.DayNumber;
             var totalPremium = 0m;
 
             for (var i = 0; i < insuranceLength; i++)
             {
-                if (i < 30) totalPremium += premiumPerDay;
-                if (i < 180 && coverType == CoverType.Yacht) totalPremium += premiumPerDay - premiumPerDay * 0.05m;
-                else if (i < 180) totalPremium += premiumPerDay - premiumPerDay * 0.02m;
-                if (i < 365 && coverType != CoverType.Yacht) totalPremium += premiumPerDay - premiumPerDay * 0.03m;
-                else if (i < 365) totalPremium += premiumPerDay - premiumPerDay * 0.08m;
+                totalPremium += CalculateDailyPremium(i, premiumPerDay, coverType);
             }
 
             return totalPremium;
+        }
+
+        private static decimal CalculateDailyPremium(int dayIndex, decimal basePremium, CoverType coverType)
+        {
+            var discount = 0m;
+            if (dayIndex >= 30 && dayIndex < 180)
+            {
+                discount = (coverType == CoverType.Yacht) ? 0.05m : 0.02m;
+            }
+            else if (dayIndex >= 180)
+            {
+                discount = (coverType == CoverType.Yacht) ? 0.03m : 0.01m;
+            }
+            return basePremium - basePremium * discount;
+        }
+
+        private static decimal GetMultiplier(CoverType coverType)
+        {
+            switch (coverType)
+            {
+                case CoverType.Yacht:
+                    return 1.1m;
+                case CoverType.PassengerShip:
+                    return 1.2m;
+                case CoverType.Tanker:
+                    return 1.5m;
+                default:
+                    return 1.3m;
+            }
         }
 
         private static CoverAuditModel GetAuditModel(string id, string requestType)

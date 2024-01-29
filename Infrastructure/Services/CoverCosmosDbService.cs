@@ -12,6 +12,7 @@ namespace Infrastructure.Services
         {
             if (dbClient == null) throw new ArgumentNullException(nameof(dbClient));
             _container = dbClient.GetContainer(databaseName, containerName);
+            EnsureContainerExistsAsync().GetAwaiter().GetResult();
         }
 
         public async Task AddItemAsync(Cover item)
@@ -47,6 +48,12 @@ namespace Infrastructure.Services
                 results.AddRange(response.ToList());
             }
             return results;
+        }
+
+        private async Task EnsureContainerExistsAsync()
+        {
+            var database = _container.Database;
+            await database.CreateContainerIfNotExistsAsync(_container.Id, "/id");
         }
     }
 }
