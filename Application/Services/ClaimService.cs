@@ -1,14 +1,15 @@
-﻿using Application.Interfaces;
+﻿using Application.Constants;
 using Application.Models;
 using Domain.Entities;
+using Domain.Interfaces;
+using Domain.Models;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
-namespace Application.Services
+namespace Domain.Services
 {
     public class ClaimService : IClaimService
     {
-        const string QueueName = "audit";
         private readonly IClaimCosmosDbService _claimCosmosDbService;
         private readonly IQueueStorageService _queueStorageService;
         private readonly IConfiguration _configuration;
@@ -22,31 +23,34 @@ namespace Application.Services
             _configuration = configuration;
 
         }
-        public async Task<Claim> CreateAsync(CreateClaimModel createClaimModel)
+        public async Task<GetClaimModel> CreateAsync(CreateClaimModel createClaimModel)
         {
             //validate input
             var entity = ConvertToEntity(createClaimModel);
             await _claimCosmosDbService.AddItemAsync(entity);
             var claimAuditModel = GetAuditModel(entity.Id, "POST");
-            var message = JsonSerializer.Serialize(claimAuditModel);
-            await _queueStorageService.UploadNewMessageToQueueAsync(_configuration.GetConnectionString("StorageAccount"), QueueName, message);
-            return entity;
+            await AddMessageToQueue(JsonSerializer.Serialize(claimAuditModel));
+            return CovertToModel(entity);
         }
 
-        public async Task<Claim> GetItemAsync(string Id)
+        public async Task<GetClaimModel> GetItemAsync(string Id)
         {
-            return await _claimCosmosDbService.GetItemAsync(Id);
+            var entity = await _claimCosmosDbService.GetItemAsync(Id);
+            return CovertToModel(entity);
         }
 
-        public async Task<IEnumerable<Claim>> GetItemsAsync()
+        public async Task<IEnumerable<GetClaimModel>> GetItemsAsync()
         {
-            return await _claimCosmosDbService.GetItemsAsync();
+            var entities = await _claimCosmosDbService.GetItemsAsync();
+            var models = entities.Select(CovertToModel).ToList();
+            return models;
         }
 
         public async Task DeleteItemAsync(string id)
         {
-            var claimAuditModel = GetAuditModel(id, "DELETE");
             await _claimCosmosDbService.DeleteItemAsync(id);
+            var claimAuditModel = GetAuditModel(id, "DELETE");
+            await AddMessageToQueue(JsonSerializer.Serialize(claimAuditModel));
         }
 
         private static ClaimAuditModel GetAuditModel(string id, string requestType)
@@ -59,6 +63,13 @@ namespace Application.Services
             };
         }
 
+        private async Task AddMessageToQueue(string message)
+        {
+            await _queueStorageService.UploadNewMessageToQueueAsync(_configuration.GetConnectionString("StorageAccount"),
+                QueueName.AuditClaimQueue,
+                message);
+        }
+
         private static Claim ConvertToEntity(CreateClaimModel createClaimModel)
         {
             return new Claim
@@ -69,6 +80,19 @@ namespace Application.Services
                 DamageCost = createClaimModel.DamageCost,
                 Name = createClaimModel.Name,
                 Type = createClaimModel.Type,
+            };
+        }
+
+        private static GetClaimModel CovertToModel(Claim claim)
+        {
+            return new GetClaimModel
+            {
+                CoverId = claim.CoverId,
+                Created = claim.Created,
+                DamageCost = claim.DamageCost,
+                Id = claim.Id,
+                Name = claim.Name,
+                Type = claim.Type
             };
         }
     }

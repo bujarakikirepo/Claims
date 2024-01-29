@@ -1,13 +1,13 @@
 ﻿using Application.Models;
-using Domain.Entities;
+using Domain.Models;
 
-namespace Application.Interfaces
+namespace Domain.Interfaces
 {
     public interface IClaimService
     {
-        public Task<Claim> CreateAsync(CreateClaimModel createClaimModel);
-        public Task<IEnumerable<Claim>> GetItemsAsync();
-        public Task<Claim> GetItemAsync(string Id);
+        public Task<GetClaimModel> CreateAsync(CreateClaimModel createClaimModel);
+        public Task<IEnumerable<GetClaimModel>> GetItemsAsync();
+        public Task<GetClaimModel> GetItemAsync(string Id);
         public Task DeleteItemAsync(string Id);
     }
 }

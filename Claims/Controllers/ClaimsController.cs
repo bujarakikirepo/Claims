@@ -1,5 +1,6 @@
-using Application.Interfaces;
 using Application.Models;
+using Domain.Interfaces;
+using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Claims.Controllers
@@ -16,7 +17,7 @@ namespace Claims.Controllers
         }
 
         [HttpGet]
-        public async Task<IEnumerable<Domain.Entities.Claim>> GetAsync()
+        public async Task<IEnumerable<GetClaimModel>> GetAsync()
         {
             return await _claimService.GetItemsAsync();
         }
@@ -35,7 +36,7 @@ namespace Claims.Controllers
         }
 
         [HttpGet("{id}")]
-        public Task<Domain.Entities.Claim> GetAsync(string id)
+        public Task<GetClaimModel> GetAsync(string id)
         {
             return _claimService.GetItemAsync(id);
         }

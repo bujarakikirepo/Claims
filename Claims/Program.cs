@@ -1,6 +1,6 @@
-using Application.Interfaces;
-using Application.Services;
-using Claims.Auditing;
+using Domain.Interfaces;
+using Domain.Services;
+using Infrastructure.Auditing;
 using Infrastructure.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
@@ -40,9 +40,10 @@ builder.Services.AddScoped<ICoverCosmosDbService>(provider =>
         provider.GetRequiredService<CosmosClient>(),
         "ClaimDb",
         "Cover"));
-builder.Services.AddDbContext<AuditContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<Infrastructure.Auditing.AuditContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IQueueStorageService, QueueStorageService>();
 builder.Services.AddScoped<IClaimService, ClaimService>();
+builder.Services.AddScoped<IAuditingService, AuditingService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -65,7 +66,7 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<AuditContext>();
+    var context = scope.ServiceProvider.GetRequiredService<Infrastructure.Auditing.AuditContext>();
     context.Database.Migrate();
 }
 app.Run();

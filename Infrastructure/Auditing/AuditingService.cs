@@ -1,15 +1,18 @@
-﻿namespace Claims.Auditing
+﻿using Domain.Entities;
+using Domain.Interfaces;
+
+namespace Infrastructure.Auditing
 {
-    public class Auditer
+    public class AuditingService : IAuditingService
     {
         private readonly AuditContext _auditContext;
 
-        public Auditer(AuditContext auditContext)
+        public AuditingService(AuditContext auditContext)
         {
             _auditContext = auditContext;
         }
 
-        public void AuditClaim(string id, string httpRequestType)
+        public async Task AuditClaim(string id, string httpRequestType)
         {
             var claimAudit = new ClaimAudit()
             {
@@ -19,10 +22,10 @@
             };
 
             _auditContext.Add(claimAudit);
-            _auditContext.SaveChanges();
+            await _auditContext.SaveChangesAsync();
         }
-        
-        public void AuditCover(string id, string httpRequestType)
+
+        public async Task AuditCover(string id, string httpRequestType)
         {
             var coverAudit = new CoverAudit()
             {
@@ -32,7 +35,7 @@
             };
 
             _auditContext.Add(coverAudit);
-            _auditContext.SaveChanges();
+            await _auditContext.SaveChangesAsync();
         }
     }
 }

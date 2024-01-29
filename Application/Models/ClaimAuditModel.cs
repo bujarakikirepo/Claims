@@ -1,9 +1,7 @@
-﻿namespace Application.Models
+﻿namespace Domain.Models
 {
     public class ClaimAuditModel
     {
-        public int Id { get; set; }
-
         public string? ClaimId { get; set; }
 
         public DateTime Created { get; set; }

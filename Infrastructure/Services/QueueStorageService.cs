@@ -1,5 +1,5 @@
-﻿using Application.Interfaces;
-using Azure.Storage.Queues;
+﻿using Azure.Storage.Queues;
+using Domain.Interfaces;
 
 namespace Infrastructure.Services
 {
