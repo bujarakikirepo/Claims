@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.Services;
+using Claims.Middlewares;
 using Domain.Interfaces;
 using Domain.Services;
 using Infrastructure.Auditing;
@@ -64,6 +65,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.MapControllers();
 

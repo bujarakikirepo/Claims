@@ -1,4 +1,5 @@
 ﻿using Application.Constants;
+using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
 using Domain.Entities;
@@ -26,7 +27,7 @@ namespace Application.Services
 
         public async Task<GetCoverModel> CreateAsync(CreateCoverModel createCoverModel)
         {
-            //validate input
+            ValidateForCreate(createCoverModel);
             var entity = ConvertToEntity(createCoverModel);
             await _coverCosmosDbService.AddItemAsync(entity);
             var claimAuditModel = GetAuditModel(entity.Id, "POST");
@@ -49,6 +50,8 @@ namespace Application.Services
 
         public async Task DeleteItemAsync(string id)
         {
+            _ = await _coverCosmosDbService.GetItemAsync(id)
+                ?? throw new EntityNotFoundException($"Cover id {id} not found");
             await _coverCosmosDbService.DeleteItemAsync(id);
             var claimAuditModel = GetAuditModel(id, "DELETE");
             await AddMessageToQueue(JsonSerializer.Serialize(claimAuditModel));
@@ -77,10 +80,24 @@ namespace Application.Services
             return totalPremium;
         }
 
+        private static void ValidateForCreate(CreateCoverModel createCoverModel)
+        {
+            if (createCoverModel.StartDate < DateOnly.FromDateTime(DateTime.Now))
+            {
+                throw new BadRequestException("StartDate cannot be in the past");
+            }
+
+            var insuranceLength = createCoverModel.EndDate.DayNumber - createCoverModel.StartDate.DayNumber;
+            if (insuranceLength > 365)
+            {
+                throw new BadRequestException("Total insurance period cannot exceed 1 year");
+            }
+        }
+
         private static decimal CalculateDailyPremium(int dayIndex, decimal basePremium, CoverType coverType)
         {
             var discount = 0m;
-            if (dayIndex >= 30 && dayIndex < 180)
+            if (dayIndex > 30 && dayIndex < 180)
             {
                 discount = (coverType == CoverType.Yacht) ? 0.05m : 0.02m;
             }
@@ -115,6 +132,8 @@ namespace Application.Services
                 HttpRequestType = requestType
             };
         }
+
+        //Auto mapper can be used instead of manually 
 
         private Cover ConvertToEntity(CreateCoverModel createCoverModel)
         {

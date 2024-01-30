@@ -1,4 +1,5 @@
 ﻿using Application.Constants;
+using Application.Exceptions;
 using Application.Models;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -11,21 +12,25 @@ namespace Domain.Services
     public class ClaimService : IClaimService
     {
         private readonly IClaimCosmosDbService _claimCosmosDbService;
+        private readonly ICoverCosmosDbService _coverCosmosDbService;
         private readonly IQueueStorageService _queueStorageService;
         private readonly IConfiguration _configuration;
 
         public ClaimService(IClaimCosmosDbService claimCosmosDbService,
+            ICoverCosmosDbService coverCosmosDbService,
             IQueueStorageService queueStorageService,
             IConfiguration configuration)
         {
             _claimCosmosDbService = claimCosmosDbService;
+            _coverCosmosDbService = coverCosmosDbService;
             _queueStorageService = queueStorageService;
             _configuration = configuration;
 
         }
+
         public async Task<GetClaimModel> CreateAsync(CreateClaimModel createClaimModel)
         {
-            //validate input
+            await ValidateForCreateAsync(createClaimModel);
             var entity = ConvertToEntity(createClaimModel);
             await _claimCosmosDbService.AddItemAsync(entity);
             var claimAuditModel = GetAuditModel(entity.Id, "POST");
@@ -48,9 +53,29 @@ namespace Domain.Services
 
         public async Task DeleteItemAsync(string id)
         {
+            var claim = await _claimCosmosDbService.GetItemAsync(id);
+            if (claim == null)
+            {
+                throw new EntityNotFoundException($"Claim id {id} not found");
+            }
             await _claimCosmosDbService.DeleteItemAsync(id);
             var claimAuditModel = GetAuditModel(id, "DELETE");
             await AddMessageToQueue(JsonSerializer.Serialize(claimAuditModel));
+        }
+
+        private async Task ValidateForCreateAsync(CreateClaimModel claimModel)
+        {
+            var cover = await _coverCosmosDbService.GetItemAsync(claimModel.CoverId)
+                ?? throw new EntityNotFoundException($"Cover id {claimModel.CoverId} not found");
+            if (claimModel.DamageCost > 100000)
+            {
+                throw new BadRequestException("DamageCost cannot exceed 100.000");
+            }
+            var currentDate = DateOnly.FromDateTime(DateTime.Now);
+            if (currentDate > cover.EndDate)
+            {
+                throw new BadRequestException("Created date must be within the period of the related Cover");
+            }
         }
 
         private static ClaimAuditModel GetAuditModel(string id, string requestType)
