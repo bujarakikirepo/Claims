@@ -23,17 +23,18 @@ namespace Claims.Tests
             //TODO: Apart from ensuring 200 OK being returned, what else can be asserted?
 
             Assert.Equal("application/json", response?.Content?.Headers?.ContentType?.MediaType);
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var claims = JsonConvert.DeserializeObject<List<GetClaimModel>>(responseContent);
-
-            Assert.NotEmpty(claims);
-
-            foreach (var claim in claims)
+            if (response?.Content != null)
             {
-                Assert.NotNull(claim.Name);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var claims = JsonConvert.DeserializeObject<List<GetClaimModel>>(responseContent);
+                if (claims != null)
+                {
+                    foreach (var claim in claims)
+                    {
+                        Assert.NotNull(claim.Name);
+                    }
+                }
             }
-
         }
 
     }

@@ -1,20 +1,7 @@
-﻿using System.Runtime.Serialization;
-
-namespace Application.Exceptions
+﻿namespace Application.Exceptions
 {
     [Serializable]
-    public class EntityNotFoundException : Exception
+    public class EntityNotFoundException(string message) : Exception(message)
     {
-        public EntityNotFoundException(string message)
-            : base(message)
-        {
-
-        }
-
-        protected EntityNotFoundException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-
-        }
     }
 }

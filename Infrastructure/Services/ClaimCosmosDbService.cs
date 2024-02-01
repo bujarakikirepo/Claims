@@ -25,7 +25,7 @@ namespace Infrastructure.Services
             await _container.DeleteItemAsync<Claim>(id, new PartitionKey(id));
         }
 
-        public async Task<Claim> GetItemAsync(string id)
+        public async Task<Claim?> GetItemAsync(string id)
         {
             try
             {

@@ -6,9 +6,9 @@ namespace Domain.Models
     public class CreateClaimModel
     {
         [Required]
-        public string CoverId { get; set; }
+        public required string CoverId { get; set; }
         [Required]
-        public string Name { get; set; }
+        public required string Name { get; set; }
         [Required]
         public ClaimType Type { get; set; }
         [Required]

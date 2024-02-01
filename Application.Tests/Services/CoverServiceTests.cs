@@ -22,7 +22,7 @@ namespace Application.Tests.Services
             {
                 StartDate = DateOnly.FromDateTime(DateTime.Now.AddDays(-1)),
                 EndDate = DateOnly.FromDateTime(DateTime.Now.AddDays(30)),
-                Type = Domain.Enums.CoverType.Yacht
+                Type = CoverType.Yacht
             };
 
             var coverCosmosDbServiceMock = new Mock<ICoverCosmosDbService>();
@@ -88,16 +88,16 @@ namespace Application.Tests.Services
             {
                 StartDate = DateOnly.FromDateTime(DateTime.Now),
                 EndDate = DateOnly.FromDateTime(DateTime.Now.AddDays(30)),
-                Type = Domain.Enums.CoverType.Yacht
+                Type = CoverType.Yacht
             };
 
             var coverCosmosDbServiceMock = new Mock<ICoverCosmosDbService>();
             var queueStorageServiceMock = new Mock<IQueueStorageService>();
 
             var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string>
+            .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                { "ConnectionStrings:StorageAccount", "dev" }
+                { "ConnectionStrings:StorageAccount", "Dev" }
             })
             .Build();
 
@@ -128,8 +128,11 @@ namespace Application.Tests.Services
             Assert.That(capturedMessage, Is.Not.Null.And.Not.Empty);
 
             var auditModel = JsonSerializer.Deserialize<CoverAuditModel>(capturedMessage);
-            Assert.That(auditModel.CoverId, Is.EqualTo(result.Id));
-            Assert.That(auditModel.HttpRequestType, Is.EqualTo("POST"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(auditModel?.CoverId, Is.EqualTo(result.Id));
+                Assert.That(auditModel?.HttpRequestType, Is.EqualTo("POST"));
+            });
         }
 
         [TestCase(CoverType.Yacht)]
@@ -229,7 +232,7 @@ namespace Application.Tests.Services
             }
         }
 
-        private string GetCapturedQueueMessage(Mock<IQueueStorageService> queueStorageServiceMock)
+        private static string GetCapturedQueueMessage(Mock<IQueueStorageService> queueStorageServiceMock)
         {
             var capturedArguments = (string)queueStorageServiceMock.Invocations[0].Arguments[2];
             return capturedArguments;

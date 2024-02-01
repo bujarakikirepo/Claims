@@ -16,7 +16,7 @@ public class CoversController : ControllerBase
     }
 
     [HttpPost("premium")]
-    public async Task<ActionResult> ComputePremiumAsync(DateOnly startDate, DateOnly endDate, Domain.Enums.CoverType coverType)
+    public ActionResult ComputePremiumAsync(DateOnly startDate, DateOnly endDate, Domain.Enums.CoverType coverType)
     {
         var result = _coverService.ComputePremium(startDate, endDate, coverType);
         return Ok(result);

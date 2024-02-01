@@ -41,6 +41,10 @@ namespace Domain.Services
         public async Task<GetClaimModel> GetItemAsync(string Id)
         {
             var entity = await _claimCosmosDbService.GetItemAsync(Id);
+            if (entity == null)
+            {
+                throw new EntityNotFoundException($"Claim id {Id} not found");
+            }
             return CovertToModel(entity);
         }
 

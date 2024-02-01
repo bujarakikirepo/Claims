@@ -2,10 +2,10 @@
 {
     public class CoverAuditModel
     {
-        public string? CoverId { get; set; }
+        public required string CoverId { get; set; }
 
         public DateTime Created { get; set; }
 
-        public string? HttpRequestType { get; set; }
+        public required string HttpRequestType { get; set; }
     }
 }
