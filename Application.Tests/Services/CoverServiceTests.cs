@@ -139,6 +139,7 @@ namespace Application.Tests.Services
         [TestCase(CoverType.Tanker)]
         [TestCase(CoverType.PassengerShip)]
         [TestCase(CoverType.BulkCarrier)]
+        [TestCase(CoverType.ContainerShip)]
         public void Given30DaysInsuranceLength_WHEN_ComputePremium_THEN_ReturnsCorrectPremium(CoverType coverType)
         {
             // Arrange

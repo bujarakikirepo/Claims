@@ -1,4 +1,5 @@
-﻿using Application.Constants;
+﻿using Application.ComputePremium;
+using Application.Constants;
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Models;
@@ -66,18 +67,10 @@ namespace Application.Services
 
         public decimal ComputePremium(DateOnly startDate, DateOnly endDate, CoverType coverType)
         {
-            var basePremiumPerDay = 1250m;
-            var multiplier = GetMultiplier(coverType);
-            var premiumPerDay = basePremiumPerDay * multiplier;
-            var insuranceLength = endDate.DayNumber - startDate.DayNumber;
-            var totalPremium = 0m;
-
-            for (var i = 0; i < insuranceLength; i++)
-            {
-                totalPremium += CalculateDailyPremium(i, premiumPerDay, coverType);
-            }
-
-            return totalPremium;
+            var premiumInstance = GetPremiumInstance(coverType);
+            return premiumInstance == null
+                ? throw new BadRequestException($"Wrong cover type {coverType}")
+                : premiumInstance.Compute(startDate, endDate);
         }
 
         private static void ValidateForCreate(CreateCoverModel createCoverModel)
@@ -94,32 +87,22 @@ namespace Application.Services
             }
         }
 
-        private static decimal CalculateDailyPremium(int dayIndex, decimal basePremium, CoverType coverType)
-        {
-            var discount = 0m;
-            if (dayIndex > 30 && dayIndex < 180)
-            {
-                discount = (coverType == CoverType.Yacht) ? 0.05m : 0.02m;
-            }
-            else if (dayIndex >= 180)
-            {
-                discount = (coverType == CoverType.Yacht) ? 0.03m : 0.01m;
-            }
-            return basePremium - basePremium * discount;
-        }
-
-        private static decimal GetMultiplier(CoverType coverType)
+        private static IComputePremium? GetPremiumInstance(CoverType coverType)
         {
             switch (coverType)
             {
                 case CoverType.Yacht:
-                    return 1.1m;
+                    return new YachtComputation();
                 case CoverType.PassengerShip:
-                    return 1.2m;
+                    return new PassengerShipComputation();
                 case CoverType.Tanker:
-                    return 1.5m;
+                    return new TankerComputation();
+                case CoverType.BulkCarrier:
+                    return new BulkCarrierComputation();
+                case CoverType.ContainerShip:
+                    return new ContainerShipComputation();
                 default:
-                    return 1.3m;
+                    return null;
             }
         }
 
